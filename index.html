@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For You 🌸</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* =========================================
+       1. VARIABEL & RESET
+    ========================================= */
+    :root {
+      --primary: #FFB7B2;   
+      --secondary: #E2F0CB; 
+      --accent: #FF7043;    
+      --text: #5D5D5D;
+      --glass-bg: rgba(255, 255, 255, 0.45);
+      --glass-border: rgba(255, 255, 255, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(-45deg, #FF9A9E, #FECFEF, #A1C4FD, #C2E9FB);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: background 1.5s ease;
+    }
+
+    body.dark-mode {
+      background: #050510;
+      animation: none;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .particles-bg {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;
+      transition: opacity 1s;
+    }
+    body.dark-mode .particles-bg { opacity: 0; }
+    
+    .particle {
+      position: absolute; font-size: 20px; animation: floatUp 8s linear infinite; opacity: 0;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(100vh) scale(0.5) rotate(0deg); opacity: 0; }
+      20% { opacity: 0.5; }
+      80% { opacity: 0.5; }
+      100% { transform: translateY(-10vh) scale(1.2) rotate(20deg); opacity: 0; }
+    }
+
+    /* =========================================
+       2. CANVAS UNTUK EFEK SERPIHAN LOVE GLOWING
+    ========================================= */
+    #particleCanvas {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none; transition: opacity 1s;
+    }
+    
+    #ily-text {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      color: #fff; font-size: 4rem; font-family: 'Pacifico', cursive;
+      text-shadow: 0 0 10px #ff66b2, 0 0 20px #ff66b2, 0 0 40px #ff0066, 0 0 80px #ff0066;
+      opacity: 0; transition: opacity 2.5s ease-in-out;
+      z-index: 101; pointer-events: none; text-align: center;
+      letter-spacing: 2px;
+    }
+
+    /* =========================================
+       3. KOTAK KACA (GLASSMORPHISM)
+    ========================================= */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 2px solid var(--glass-border);
+      border-radius: 35px;
+      padding: 40px;
+      width: 90%;
+      max-width: 450px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(31, 38, 135, 0.15);
+      position: relative;
+      z-index: 10;
+      display: none; 
+    }
+
+    .glass-card::after {
+      content: '';
+      position: absolute; inset: 12px;
+      border: 2px dashed rgba(255, 154, 158, 0.8);
+      border-radius: 25px; pointer-events: none;
+    }
+
+    .active-page {
+      display: block;
+      animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    h1, h2 { font-family: 'Pacifico', cursive; color: #FF7B89; margin-bottom: 10px; font-weight: normal; }
+    p { font-size: 15px; line-height: 1.6; margin-bottom: 20px; font-weight: 700; color: #6D4C41; }
+
+    button.btn-main {
+      background: linear-gradient(135deg, #FF9A9E, #FF7B89);
+      border: none; border-radius: 50px; padding: 14px 35px;
+      font-size: 16px; font-weight: 800; color: #fff;
+      cursor: pointer; box-shadow: 0 6px 20px rgba(255, 154, 158, 0.4);
+      transition: all 0.3s ease; position: relative; z-index: 20;
+      font-family: 'Nunito', sans-serif;
+    }
+    button.btn-main:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(255, 154, 158, 0.6); }
+
+    /* =========================================
+       4. GEMBOK CUSTOM (LAYOUT BARU)
+    ========================================= */
+    .padlock-wrapper {
+      margin: 20px auto 30px; 
+      position: relative; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 25px;
+      z-index: 20;
+    }
+    
+    .padlock-graphic {
+      position: relative;
+      width: 100px;
+      height: 70px;
+      margin-top: 40px; 
+    }
+    
+    .shackle {
+      width: 60px; height: 50px;
+      border: 12px solid #F8BBD0;
+      border-bottom: none;
+      border-radius: 40px 40px 0 0;
+      position: absolute; top: -50px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 1; 
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: inset 0 5px 10px rgba(0,0,0,0.1);
+    }
+    
+    .shackle.unlocked {
+      transform: translate(-50%, -30px);
+    }
+
+    .padlock-body {
+      width: 100px; height: 70px;
+      background: linear-gradient(135deg, #FF9A9E, #FFB7B2);
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset 0 2px 5px rgba(255,255,255,0.5);
+      display: flex; justify-content: center; align-items: center;
+      position: absolute; top: 0; left: 0;
+      z-index: 2;
+    }
+
+    .keyhole {
+      width: 16px; height: 16px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      position: relative;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .keyhole::after {
+      content: '';
+      position: absolute;
+      top: 12px; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 14px solid rgba(255,255,255,0.9);
+    }
+
+    .combo-row {
+      display: flex; gap: 15px; justify-content: center; z-index: 3;
+    }
+
+    .digit-col {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+
+    .arrow-btn {
+      background: rgba(255, 154, 158, 0.8); 
+      border: none; border-radius: 8px;
+      color: #fff; cursor: pointer; padding: 8px 18px; font-size: 16px;
+      transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex; justify-content: center; align-items: center;
+      position: relative; z-index: 10; pointer-events: auto; /* Memastikan bisa diklik di Android */
+    }
+    .arrow-btn:hover, .arrow-btn:active { 
+      background: #FF7B89; transform: scale(1.1); 
+    }
+
+    .digit-display {
+      width: 50px; height: 60px; background: rgba(255, 255, 255, 0.95);
+      border-radius: 10px; display: flex; justify-content: center; align-items: center;
+      font-size: 28px; font-weight: 900; color: #FF7B89; font-family: 'Nunito', sans-serif;
+      box-shadow: inset 0 3px 6px rgba(0,0,0,0.1), 0 4px 10px rgba(255,154,158,0.2);
+    }
+
+    .shake { animation: wrongPwd 0.4s ease-in-out; }
+    @keyframes wrongPwd {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+    
+    #error-msg { color: #E53935; font-size: 13px; margin-top: -10px; opacity: 0; transition: opacity 0.3s;}
+
+    /* =========================================
+       5. HALAMAN 2: MINI GAME CATCH HEARTS
+    ========================================= */
+    .meter-container {
+      width: 100%; height: 20px; background: rgba(255,255,255,0.5);
+      border-radius: 20px; margin: 20px 0; overflow: hidden;
+      border: 2px solid var(--primary); position: relative; z-index: 20;
+    }
+    .meter-fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg, #FF9A9E, #FF7B89);
+      transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .catch-area {
+      width: 100%; height: 200px; position: relative; margin-bottom: 10px; z-index: 20;
+    }
+    .floating-heart {
+      position: absolute; font-size: 38px; cursor: pointer;
+      animation: floatHeartGame 3s linear infinite; transition: transform 0.2s;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+    .floating-heart:active { transform: scale(0.8); }
+    @keyframes floatHeartGame {
+      0% { transform: translateY(200px) scale(0.8); opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { transform: translateY(-20px) scale(1.2); opacity: 0; }
+    }
+    #btn-surat { display: none; margin: 0 auto; }
+
+    /* =========================================
+       6. HALAMAN 3: TYPEWRITER
+    ========================================= */
+    #typewriter { 
+      min-height: 180px; text-align: left; margin: 20px 0; 
+      font-weight: 700; color: #5D4037; font-size: 16px; 
+      line-height: 1.8; position: relative; z-index: 20;
+    }
+    .hidden { display: none; }
+
+    /* =========================================
+       7. HALAMAN 4: CONFETTI & CLOSING
+    ========================================= */
+    .gift-box { font-size: 80px; cursor: pointer; animation: bounce 2s infinite; margin: 20px 0; position: relative; z-index: 20;}
+    @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
+    canvas#confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: none; }
+  </style>
+</head>
+<body>
+
+  <audio id="bgMusic" src="https://feeldreams.github.io/audio/angelbaby.mp3" loop></audio>
+
+  <div class="particles-bg" id="particles"></div>
+  <canvas id="particleCanvas"></canvas>
+  <div id="ily-text">I LOVE YOU</div>
+
+  <div class="glass-card active-page" id="page1">
+    <h2 id="lock-title">Buka Hati Aku? ✨</h2>
+    <p id="lock-desc">Coba masukkan kombinasi rahasia kita!</p>
+    
+    <div class="padlock-wrapper" id="padlock-wrap">
+      
+      <!-- Gembok Visual Dibuat Lebih Mungil di Atas -->
+      <div class="padlock-graphic">
+        <div class="shackle" id="shackle"></div>
+        <div class="padlock-body">
+          <div class="keyhole"></div>
+        </div>
+      </div>
+
+      <!-- Angka di bawah gembok -->
+      <div class="combo-row">
+        <div class="digit-col">
+          <button class="arrow-btn" onclick="changeDigit(0, 1)">▲</button>
+          <div class="digit-display" id="digit0">0</div>
+          <button class="arrow-btn" onclick="changeDigit(0, -1)">▼</button>
+        </div>
+
+        <div class="digit-col">
+          <button class="arrow-btn" onclick="changeDigit(1, 1)">▲</button>
+          <div class="digit-display" id="digit1">0</div>
+          <button class="arrow-btn" onclick="changeDigit(1, -1)">▼</button>
+        </div>
+
+        <div class="digit-col">
+          <button class="arrow-btn" onclick="changeDigit(2, 1)">▲</button>
+          <div class="digit-display" id="digit2">0</div>
+          <button class="arrow-btn" onclick="changeDigit(2, -1)">▼</button>
+        </div>
+      </div>
+
+    </div>
+
+    <p id="error-msg">Salah ayang 🥺 Coba inget-inget lagi!</p>
+  </div>
+
+  <div class="glass-card" id="page2">
+    <h2>Eitss, Bentar! ✋</h2>
+    <p>Sebelum lanjut baca suratnya, main tangkep-tangkepan hati dulu yuk! Coba kumpulin 5 hati yang lewat di bawah ini yaa 😜💖</p>
+    <div class="meter-container">
+      <div class="meter-fill" id="meter-fill"></div>
+    </div>
+    <div class="catch-area" id="catch-area"></div>
+    <button class="btn-main" id="btn-surat" onclick="nextPage('page2', 'page3'); typeMessage();">Baca Surat 💌</button>
+  </div>
+
+  <div class="glass-card" id="page3">
+    <h2>Untuk Kamu 💖</h2>
+    <div id="typewriter"></div>
+    <button class="btn-main hidden" id="btn-show-surprise" onclick="nextPage('page3', 'page4')">Ada Kejutan! 🎁</button>
+  </div>
+
+  <div class="glass-card" id="page4">
+    <h2>Yeayyy! 🎉</h2>
+    <p>Makasih yaa udah mau main-main bentar wkwk. Sentuh kado di bawah yaa!</p>
+    <div class="gift-box" id="gift" onclick="openGift()">📦</div>
+    <div id="final-message" class="hidden">
+      <h2 style="font-size: 26px;">I Love You! 🌸</h2>
+      <p>Semoga kamu senyum terus hari ini. Jangan lupa bahagia yaa, karena senyum kamu itu favorit aku 💕</p>
+      <button class="btn-main" onclick="shareWhatsApp()">💌 Balas ke WA Aku</button>
+    </div>
+  </div>
+
+  <canvas id="confetti"></canvas>
+
+  <script>
+    const emojis = ['✨', '🌸', '💖', '🎀', '🧸', '💫'];
+    const particleContainer = document.getElementById('particles');
+    for(let i=0; i<25; i++) {
+      let p = document.createElement('div');
+      p.className = 'particle';
+      p.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.animationDelay = (Math.random() * 8) + 's';
+      p.style.fontSize = (Math.random() * 15 + 15) + 'px';
+      particleContainer.appendChild(p);
+    }
+
+    const music = document.getElementById('bgMusic');
+
+    function nextPage(hideId, showId) {
+      document.getElementById(hideId).classList.remove('active-page');
+      document.getElementById(showId).classList.add('active-page');
+    }
+
+    let code = [0, 0, 0];
+    
+    function changeDigit(index, delta) {
+      // Dibungkus try-catch agar tidak error saat disentuh di Android
+      try {
+        let p = music.play();
+        if (p !== undefined) {
+          p.catch(e => { /* Abaikan blokir browser HP agar angka tetap bisa jalan */ });
+        }
+      } catch(e) {}
+      
+      code[index] += delta;
+      if (code[index] > 9) code[index] = 0;
+      if (code[index] < 0) code[index] = 9;
+      
+      document.getElementById('digit' + index).innerText = code[index];
+      document.getElementById('error-msg').style.opacity = 0;
+      
+      checkLock();
+    }
+
+    let isUnlocking = false;
+
+    function checkLock() {
+      if (isUnlocking) return;
+      if (code[0] === 8 && code[1] === 1 && code[2] === 2) {
+        isUnlocking = true;
+        document.getElementById('shackle').classList.add('unlocked');
+        document.getElementById('lock-title').innerText = "Terbuka! ❤️";
+        document.getElementById('lock-desc').innerText = "Yeayyy password benar!";
+        setTimeout(() => {
+          document.getElementById('page1').classList.remove('active-page');
+          startHeartParticleAnimation();
+        }, 1500);
+      } else {
+        clearTimeout(window.errorTimeout);
+        window.errorTimeout = setTimeout(() => {
+          if (!isUnlocking && (code[0]!==0 || code[1]!==0 || code[2]!==0)) {
+             document.getElementById('padlock-wrap').classList.add('shake');
+             document.getElementById('error-msg').style.opacity = 1;
+             setTimeout(() => {
+               document.getElementById('padlock-wrap').classList.remove('shake');
+             }, 400);
+          }
+        }, 2000); 
+      }
+    }
+
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let particlesArray = [];
+    const numParticles = 1500; 
+    const pColors = ['#ff007f', '#ff4d4d', '#ffb3b3', '#ffffff', '#ff66b2', '#00e5ff'];
+    let isHeartFormed = false;
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.targetX = this.x;
+        this.targetY = this.y;
+        this.size = Math.random() * 2.5 + 1;
+        this.color = pColors[Math.floor(Math.random() * pColors.length)];
+        this.vx = (Math.random() - 0.5) * 2;
+        this.vy = (Math.random() - 0.5) * 2;
+        this.speed = 0.03 + Math.random() * 0.05;
+      }
+      update() {
+        if (isHeartFormed) {
+          this.x += (this.targetX - this.x) * this.speed;
+          this.y += (this.targetY - this.y) * this.speed;
+        } else {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+          if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        }
+      }
+      draw() {
+        if (isHeartFormed) {
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = this.color;
+        } else {
+          ctx.shadowBlur = 0;
+        }
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < numParticles; i++) {
+      particlesArray.push(new Particle());
+    }
+
+    function animateParticles() {
+      if (document.body.classList.contains('dark-mode')) {
+        ctx.fillStyle = 'rgba(5, 5, 16, 0.2)'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      particlesArray.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    function startHeartParticleAnimation() {
+      document.body.classList.add('dark-mode');
+      canvas.style.zIndex = 50;
+      isHeartFormed = true;
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2 - 20;
+      const scale = Math.min(canvas.width, canvas.height) / 45; 
+
+      particlesArray.forEach((p, i) => {
+        const t = Math.random() * Math.PI * 2;
+        const offset = (Math.random() - 0.5) * 30; 
+        const hx = 16 * Math.pow(Math.sin(t), 3);
+        const hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+        p.targetX = cx + hx * scale + offset;
+        p.targetY = cy + hy * scale + offset;
+      });
+
+      setTimeout(() => { document.getElementById('ily-text').style.opacity = 1; }, 2000);
+      setTimeout(() => {
+        document.getElementById('ily-text').style.opacity = 0;
+        canvas.style.opacity = 0;
+        document.body.classList.remove('dark-mode');
+        setTimeout(() => {
+          document.getElementById('page2').classList.add('active-page');
+          startGame();
+        }, 1500);
+      }, 7500); 
+    }
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    let heartCount = 0;
+    let gameInterval;
+
+    function startGame() {
+      const area = document.getElementById('catch-area');
+      gameInterval = setInterval(() => {
+        if(heartCount >= 5) {
+          clearInterval(gameInterval);
+          return;
+        }
+        let heart = document.createElement('div');
+        heart.className = 'floating-heart';
+        heart.innerText = ['❤️','💖','💘','💝'][Math.floor(Math.random()*4)];
+        heart.style.left = Math.random() * 80 + '%';
+        heart.style.animationDuration = (Math.random() * 2 + 1.5) + 's'; 
+        
+        heart.onclick = function() {
+          heartCount++;
+          let percent = heartCount * 20;
+          document.getElementById('meter-fill').style.width = percent + '%';
+          this.remove();
+          if (heartCount >= 5) {
+            clearInterval(gameInterval);
+            area.innerHTML = '<h3 style="color:#FF7B89; font-family:Pacifico; font-size:24px; margin-top:50px;">Aaa pinter banget! 🥰</h3>';
+            document.getElementById('btn-surat').style.display = 'inline-block';
+          }
+        };
+        area.appendChild(heart);
+        setTimeout(() => heart.remove(), 4000);
+      }, 800);
+    }
+
+    const message = "HALO EKII KESAYANGANN ^^ 
+
+kalo uda buka web ini tandanya ada sesuatuu  !! ˃͈◡˂͈
+
+aku banyak kurangnya, banyak salahnya juga, dengan adanya ini aku cuma mau bilang.. 
+makasii uda mau nerima baik jahatnya aku, rupa diriku yang ga seberapa ini.. aku gabisa jelasin gimana dalemnya rasa sayangku ke mu, aku cuma bisa nunjukkin sifat peduli itu pun kayanya ga terlalu penting juga.. eum makasii uda hadir jadi orang terbaik di hidupku,uda ngewarnain hidupku, ngajarin aku hal hal baik, bikin aku ngerti kalo mana orang yang baik dan mana orang yang jahat
+
+aku sayang bgt sama mu.. sehat selalu yaa, jalanin yang menurutmu lebih mudah, kalo ada hal yang susah di coba pelan pelan pasti bisaa!! kalo ada apa apa ngadu aja yaa 🤍 
+i'm always for u sayang kuu!! semangat yaa love you 🤍😆";
+    let typeIndex = 0;
+
+    function typeMessage() {
+      if (typeIndex < message.length) {
+        let char = message.charAt(typeIndex);
+        if (char === '\n') {
+          document.getElementById('typewriter').innerHTML += "<br>";
+        } else {
+          document.getElementById('typewriter').innerHTML += char;
+        }
+        typeIndex++;
+        setTimeout(typeMessage, 45); 
+      } else {
+        setTimeout(() => { document.getElementById('btn-show-surprise').classList.remove('hidden'); }, 1000);
+      }
+    }
+
+    function openGift() {
+      const gift = document.getElementById('gift');
+      gift.innerText = '🌸';
+      gift.style.animation = 'none';
+      gift.style.transform = 'scale(1.2)';
+      document.getElementById('final-message').classList.remove('hidden');
+      document.getElementById('confetti').style.display = 'block';
+      startConfetti();
+    }
+
+    function shareWhatsApp() {
+      const phoneNumber = "628xxxxxxxxxx"; 
+      const text = encodeURIComponent("Aaaa lucuuu bangettt webnya! Makasih banyak yaaaa sayanggg! 🥰💖✨");
+      window.open(`https://wa.me/${phoneNumber}?text=${text}`, '_blank');
+    }
+
+    function startConfetti() {
+      const canvasC = document.getElementById("confetti");
+      const ctxC = canvasC.getContext("2d");
+      canvasC.width = window.innerWidth;
+      canvasC.height = window.innerHeight;
+      let particles = [];
+      const colors = ['#FF9A9E', '#FECFEF', '#A1C4FD', '#FFD700', '#FFB7B2'];
+
+      for (let i = 0; i < 150; i++) {
+        particles.push({
+          x: Math.random() * canvasC.width,
+          y: Math.random() * canvasC.height - canvasC.height,
+          r: Math.random() * 6 + 2,
+          dx: Math.random() * 4 - 2,
+          dy: Math.random() * 5 + 2,
+          color: colors[Math.floor(Math.random() * colors.length)]
+        });
+      }
+
+      function drawC() {
+        ctxC.clearRect(0, 0, canvasC.width, canvasC.height);
+        particles.forEach(p => {
+          ctxC.beginPath();
+          ctxC.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctxC.fillStyle = p.color;
+          ctxC.fill();
+          p.x += p.dx;
+          p.y += p.dy;
+          if (p.y > canvasC.height) { p.y = 0; p.x = Math.random() * canvasC.width; }
+        });
+        requestAnimationFrame(drawC);
+      }
+      drawC();
+    }
+  </script>
+</body>
+</html>
